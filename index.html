@@ -1,0 +1,2274 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Portfolio Pro — Dashboard de Inversiones</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0a0f;
+  --bg2: #111118;
+  --bg3: #18181f;
+  --bg4: #1e1e28;
+  --border: rgba(255,255,255,0.07);
+  --border2: rgba(255,255,255,0.12);
+  --accent: #00e5a0;
+  --accent2: #00bfff;
+  --accent3: #f0c040;
+  --red: #ff4d6d;
+  --text: #f0f0f5;
+  --text2: #9090a8;
+  --text3: #5a5a70;
+  --font-display: 'Syne', sans-serif;
+  --font-mono: 'DM Mono', monospace;
+  --radius: 10px;
+  --radius-lg: 16px;
+  --transition: 0.18s cubic-bezier(.4,0,.2,1);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-display);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* NOISE TEXTURE OVERLAY */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.6;
+}
+
+/* SIDEBAR */
+.sidebar {
+  position: fixed;
+  left: 0; top: 0; bottom: 0;
+  width: 220px;
+  background: var(--bg2);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  z-index: 100;
+  transition: transform var(--transition);
+}
+
+.sidebar-logo {
+  padding: 28px 24px 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.logo-mark {
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  color: var(--text);
+}
+
+.logo-mark span { color: var(--accent); }
+
+.logo-sub {
+  font-size: 10px;
+  color: var(--text3);
+  font-family: var(--font-mono);
+  margin-top: 4px;
+  letter-spacing: 0.05em;
+}
+
+.nav-section {
+  padding: 16px 12px 8px;
+  font-size: 9px;
+  font-family: var(--font-mono);
+  color: var(--text3);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 16px;
+  margin: 1px 8px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text2);
+  border: none;
+  background: none;
+  width: calc(100% - 16px);
+  text-align: left;
+  transition: all var(--transition);
+  position: relative;
+}
+
+.nav-item:hover { background: var(--bg3); color: var(--text); }
+
+.nav-item.active {
+  background: rgba(0,229,160,0.08);
+  color: var(--accent);
+}
+
+.nav-item.active::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 50%;
+  transform: translateY(-50%);
+  width: 3px; height: 20px;
+  background: var(--accent);
+  border-radius: 0 3px 3px 0;
+}
+
+.nav-icon { font-size: 14px; width: 18px; text-align: center; }
+
+.nav-badge {
+  margin-left: auto;
+  font-size: 9px;
+  font-family: var(--font-mono);
+  background: var(--bg4);
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: var(--text3);
+}
+
+.sidebar-footer {
+  margin-top: auto;
+  padding: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.live-dot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  font-family: var(--font-mono);
+  color: var(--text3);
+}
+
+.dot-pulse {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(0,229,160,0.4); }
+  50% { opacity: 0.8; box-shadow: 0 0 0 5px rgba(0,229,160,0); }
+}
+
+/* MAIN */
+.main {
+  margin-left: 220px;
+  min-height: 100vh;
+  position: relative;
+  z-index: 1;
+}
+
+/* TOPBAR */
+.topbar {
+  position: sticky;
+  top: 0;
+  background: rgba(10,10,15,0.85);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 32px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  z-index: 50;
+}
+
+.topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.page-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ticker-tape {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text3);
+  display: flex;
+  gap: 16px;
+}
+
+.ticker-tape-item { display: flex; gap: 5px; align-items: center; }
+.ticker-tape-sym { color: var(--text2); }
+.ticker-tape-pos { color: var(--accent); }
+.ticker-tape-neg { color: var(--red); }
+
+.btn-refresh {
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  color: var(--text2);
+  padding: 6px 14px;
+  border-radius: var(--radius);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  cursor: pointer;
+  transition: all var(--transition);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-refresh:hover { background: var(--bg4); color: var(--text); border-color: var(--border2); }
+
+/* CONTENT */
+.content {
+  padding: 28px 32px 48px;
+}
+
+.section-page { display: none; }
+.section-page.active { display: block; }
+
+/* SUMMARY HEADER */
+.summary-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 28px;
+}
+
+.summary-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 18px 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+.summary-card::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--accent-c, var(--accent)), transparent);
+}
+
+.summary-label {
+  font-size: 10px;
+  font-family: var(--font-mono);
+  color: var(--text3);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.summary-value {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -1px;
+}
+
+.summary-sub {
+  font-size: 11px;
+  font-family: var(--font-mono);
+  color: var(--text3);
+  margin-top: 4px;
+}
+
+/* SECTION HEADER */
+.sec-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+
+.sec-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sec-tag {
+  font-size: 9px;
+  font-family: var(--font-mono);
+  padding: 3px 8px;
+  border-radius: 4px;
+  background: var(--bg3);
+  color: var(--text3);
+  border: 1px solid var(--border);
+}
+
+/* CARDS GRID */
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 14px;
+  margin-bottom: 32px;
+}
+
+.stock-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 18px;
+  cursor: pointer;
+  transition: all var(--transition);
+  position: relative;
+  overflow: hidden;
+}
+
+.stock-card:hover {
+  border-color: var(--border2);
+  background: var(--bg3);
+  transform: translateY(-2px);
+}
+
+.stock-card.selected {
+  border-color: var(--accent);
+  background: rgba(0,229,160,0.04);
+}
+
+.card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.card-ticker {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.5px;
+}
+
+.card-price {
+  text-align: right;
+}
+
+.price-val {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.price-chg {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  margin-top: 2px;
+}
+
+.pos { color: var(--accent); }
+.neg { color: var(--red); }
+.neu { color: var(--text3); }
+
+.card-name {
+  font-size: 11px;
+  color: var(--text3);
+  margin-bottom: 14px;
+  font-weight: 400;
+}
+
+.card-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.stat {
+  background: var(--bg3);
+  border-radius: 6px;
+  padding: 8px 10px;
+}
+
+.stat-label {
+  font-size: 9px;
+  font-family: var(--font-mono);
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 3px;
+}
+
+.stat-val {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text);
+  font-family: var(--font-mono);
+}
+
+.card-tags {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.tag {
+  font-size: 9px;
+  font-family: var(--font-mono);
+  padding: 3px 8px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  color: var(--text3);
+}
+
+.tag-green { border-color: rgba(0,229,160,0.3); color: var(--accent); background: rgba(0,229,160,0.05); }
+.tag-blue { border-color: rgba(0,191,255,0.3); color: var(--accent2); background: rgba(0,191,255,0.05); }
+.tag-yellow { border-color: rgba(240,192,64,0.3); color: var(--accent3); background: rgba(240,192,64,0.05); }
+.tag-red { border-color: rgba(255,77,109,0.3); color: var(--red); background: rgba(255,77,109,0.05); }
+
+.card-btn {
+  width: 100%;
+  margin-top: 12px;
+  padding: 8px;
+  background: var(--bg4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text3);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  cursor: pointer;
+  transition: all var(--transition);
+  text-align: center;
+}
+
+.card-btn:hover {
+  background: rgba(0,229,160,0.08);
+  border-color: rgba(0,229,160,0.3);
+  color: var(--accent);
+}
+
+/* CHART PANEL */
+.chart-panel {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+
+.chart-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.chart-panel-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.chart-tabs {
+  display: flex;
+  gap: 4px;
+}
+
+.chart-tab {
+  font-size: 10px;
+  font-family: var(--font-mono);
+  padding: 4px 10px;
+  border-radius: 5px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text3);
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.chart-tab:hover { color: var(--text); border-color: var(--border2); }
+.chart-tab.active { background: rgba(0,229,160,0.1); border-color: rgba(0,229,160,0.3); color: var(--accent); }
+
+.chart-container {
+  width: 100%;
+  height: 520px;
+}
+
+.chart-container iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+/* NEWS PANEL */
+.news-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 28px;
+}
+
+.news-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 18px;
+  transition: all var(--transition);
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.news-card:hover { border-color: var(--border2); background: var(--bg3); }
+
+.news-source {
+  font-size: 9px;
+  font-family: var(--font-mono);
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 8px;
+}
+
+.news-headline {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.5;
+  margin-bottom: 8px;
+}
+
+.news-meta {
+  font-size: 10px;
+  font-family: var(--font-mono);
+  color: var(--text3);
+  display: flex;
+  gap: 12px;
+}
+
+/* TV WIDGETS */
+.tv-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.tv-panel {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.tv-panel-head {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text2);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* CEREBRAS BANNER */
+.cerebras-chain {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px 24px;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.chain-label {
+  font-size: 10px;
+  font-family: var(--font-mono);
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+}
+
+.chain-flow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+
+.chain-node {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 16px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.chain-node span {
+  font-size: 9px;
+  font-family: var(--font-mono);
+  color: var(--text3);
+  font-weight: 400;
+}
+
+.chain-node.highlight {
+  border-color: rgba(0,229,160,0.4);
+  background: rgba(0,229,160,0.06);
+  color: var(--accent);
+}
+
+.chain-arrow {
+  color: var(--text3);
+  font-size: 14px;
+}
+
+/* RISK METER */
+.risk-bar {
+  height: 3px;
+  border-radius: 2px;
+  background: var(--bg4);
+  margin-top: 10px;
+  overflow: hidden;
+}
+
+.risk-fill { height: 100%; border-radius: 2px; }
+
+/* WATCHLIST TABLE */
+.watchlist-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.watchlist-table th {
+  font-size: 9px;
+  font-family: var(--font-mono);
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 10px 14px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+  font-weight: 400;
+}
+
+.watchlist-table td {
+  padding: 11px 14px;
+  border-bottom: 1px solid var(--border);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text2);
+}
+
+.watchlist-table tr:hover td { background: var(--bg3); }
+.watchlist-table tr:last-child td { border-bottom: none; }
+
+.td-ticker {
+  font-weight: 500;
+  color: var(--text) !important;
+  font-size: 13px !important;
+}
+
+.sparkline {
+  display: inline-block;
+  width: 60px;
+  height: 20px;
+  vertical-align: middle;
+}
+
+/* MOBILE MENU TOGGLE */
+.menu-toggle {
+  display: none;
+  position: fixed;
+  top: 12px; left: 12px;
+  z-index: 200;
+  background: var(--bg2);
+  border: 1px solid var(--border2);
+  color: var(--text);
+  width: 38px; height: 38px;
+  border-radius: var(--radius);
+  font-size: 16px;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+}
+
+/* SECTION DIVIDER */
+.sec-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 28px 0;
+}
+
+/* BADGE */
+.badge {
+  font-size: 9px;
+  font-family: var(--font-mono);
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-weight: 500;
+}
+.badge-supply { background: rgba(0,191,255,0.1); color: var(--accent2); border: 1px solid rgba(0,191,255,0.2); }
+.badge-mega { background: rgba(0,229,160,0.1); color: var(--accent); border: 1px solid rgba(0,229,160,0.2); }
+.badge-small { background: rgba(240,192,64,0.1); color: var(--accent3); border: 1px solid rgba(240,192,64,0.2); }
+.badge-spec { background: rgba(255,77,109,0.1); color: var(--red); border: 1px solid rgba(255,77,109,0.2); }
+
+/* ANIMATIONS */
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.section-page.active .cards-grid, .section-page.active .chart-panel, .section-page.active .summary-row {
+  animation: fadeIn 0.3s ease both;
+}
+
+@media (max-width: 900px) {
+  .sidebar { transform: translateX(-220px); }
+  .sidebar.open { transform: translateX(0); }
+  .main { margin-left: 0; }
+  .menu-toggle { display: flex; }
+  .summary-row { grid-template-columns: 1fr 1fr; }
+  .cards-grid { grid-template-columns: 1fr; }
+  .news-grid, .tv-row { grid-template-columns: 1fr; }
+  .chain-flow { flex-wrap: wrap; }
+  .topbar { padding: 0 16px 0 56px; }
+  .content { padding: 20px 16px 48px; }
+}
+
+/* ===== FORM STYLES ===== */
+.form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
+.form-group{display:flex;flex-direction:column;gap:6px}
+.form-label{font-size:10px;font-family:var(--font-mono);color:var(--text3);text-transform:uppercase;letter-spacing:.06em}
+.form-input{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius);color:var(--text);font-family:var(--font-mono);font-size:12px;padding:9px 12px;outline:none;transition:border-color .18s;width:100%}
+.form-input:focus{border-color:var(--accent)}
+.form-input::placeholder{color:var(--text3)}
+select.form-input option{background:var(--bg3)}
+.form-textarea{resize:vertical;min-height:70px}
+.trades-table{width:100%;border-collapse:collapse;font-size:12px}
+.trades-table th{font-size:9px;font-family:var(--font-mono);color:var(--text3);text-transform:uppercase;letter-spacing:.06em;padding:10px 12px;text-align:left;border-bottom:1px solid var(--border);font-weight:400}
+.trades-table td{padding:10px 12px;border-bottom:1px solid var(--border);font-family:var(--font-mono);color:var(--text2)}
+.trades-table tr:hover td{background:var(--bg3)}
+.trades-table tr:last-child td{border-bottom:none}
+.td-main{font-weight:600;color:var(--text)!important;font-size:13px!important}
+.td-pos{color:var(--accent)!important}
+.td-neg{color:var(--red)!important}
+.td-neu{color:var(--text3)!important}
+.filter-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:18px}
+.filter-btn{font-size:11px;font-family:var(--font-mono);padding:6px 14px;border-radius:var(--radius);border:1px solid var(--border2);background:transparent;color:var(--text3);cursor:pointer;transition:all .18s}
+.filter-btn:hover{color:var(--text);background:var(--bg3)}
+.filter-btn.active{background:rgba(0,229,160,.1);border-color:rgba(0,229,160,.35);color:var(--accent)}
+.pl-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px}
+.pl-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px;text-align:center}
+.pl-val{font-size:22px;font-weight:700;letter-spacing:-1px;margin-bottom:4px}
+.pl-lbl{font-size:9px;font-family:var(--font-mono);color:var(--text3);text-transform:uppercase;letter-spacing:.06em}
+.tv-embed-wrap{width:100%;height:520px;overflow:hidden}
+.tv-embed-wrap iframe{width:100%;height:100%;border:none}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:500;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-lg);padding:28px;width:90%;max-width:560px;max-height:90vh;overflow-y:auto}
+.modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+.modal-title{font-size:15px;font-weight:600}
+.modal-close{background:none;border:none;color:var(--text3);font-size:20px;cursor:pointer;padding:0 4px}
+.modal-close:hover{color:var(--text)}
+.del-btn{background:none;border:none;color:var(--text3);cursor:pointer;font-size:13px;padding:2px 6px;border-radius:4px}
+.del-btn:hover{color:var(--red);background:rgba(255,77,109,.1)}
+.added-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+.added-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px;position:relative}
+.added-card:hover{border-color:var(--border2)}
+.added-card .del-abs{position:absolute;top:10px;right:10px}
+</style>
+</head>
+<body>
+
+<button class="menu-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-mark">PORT<span>FOLIO</span></div>
+    <div class="logo-sub">PRO · DASHBOARD v3.0</div>
+  </div>
+
+  <div class="nav-section">Secciones</div>
+
+  <button class="nav-item active" onclick="showSection('overview')">
+    <span class="nav-icon">⬡</span> Overview
+  </button>
+  <button class="nav-item" onclick="showSection('cerebras')">
+    <span class="nav-icon">◈</span> Cerebras Supply
+    <span class="nav-badge">3</span>
+  </button>
+  <button class="nav-item" onclick="showSection('megacap')">
+    <span class="nav-icon">◉</span> Mega Cap
+    <span class="nav-badge">6</span>
+  </button>
+  <button class="nav-item" onclick="showSection('smallcap')">
+    <span class="nav-icon">◎</span> Small Caps
+    <span class="nav-badge">6</span>
+  </button>
+  <button class="nav-item" onclick="showSection('aiinfra')">
+    <span class="nav-icon">⬢</span> AI Infrastructure
+    <span class="nav-badge">6</span>
+  </button>
+  <button class="nav-item" onclick="showSection('defense')">
+    <span class="nav-icon">◆</span> Defense & Tech
+    <span class="nav-badge">10</span>
+  </button>
+  <button class="nav-item" onclick="showSection('quantum')">
+    <span class="nav-icon">◇</span> Quantum
+    <span class="nav-badge">4</span>
+  </button>
+  <button class="nav-item" onclick="showSection('cheap')">
+    <span class="nav-icon">◈</span> Cheaper Stocks
+    <span class="nav-badge">15</span>
+  </button>
+  <button class="nav-item" onclick="showSection('etf')">
+    <span class="nav-icon">▣</span> ETFs
+    <span class="nav-badge">1+</span>
+  </button>
+
+  <div class="nav-section" style="margin-top:8px;">Herramientas</div>
+
+  <button class="nav-item" onclick="showSection('chart')">
+    <span class="nav-icon">◱</span> Gráfica TV
+  </button>
+  <button class="nav-item" onclick="showSection('news')">
+    <span class="nav-icon">◰</span> Noticias
+  </button>
+  <button class="nav-item" onclick="showSection('watchlist')">
+    <span class="nav-icon">◳</span> Watchlist
+  </button>
+
+  <div class="nav-section" style="margin-top:8px;">Trading</div>
+
+  <button class="nav-item" onclick="showSection('trades')">
+    <span class="nav-icon">📒</span> Mis Trades
+  </button>
+  <button class="nav-item" onclick="showSection('reporte')">
+    <span class="nav-icon">📊</span> Reporte P&amp;L
+  </button>
+  <button class="nav-item" onclick="showSection('agregar')">
+    <span class="nav-icon">➕</span> Agregar Acción
+  </button>
+
+  <div class="sidebar-footer">
+    <div class="live-dot">
+      <div class="dot-pulse"></div>
+      DATOS EN VIVO · TV PRO
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <span class="page-title" id="page-title-label">Overview</span>
+    </div>
+    <div class="topbar-right">
+      <div class="ticker-tape" id="ticker-tape">
+        <span class="ticker-tape-item"><span class="ticker-tape-sym">NVDA</span> <span class="ticker-tape-pos">+2.3%</span></span>
+        <span class="ticker-tape-item"><span class="ticker-tape-sym">PLTR</span> <span class="ticker-tape-pos">+1.8%</span></span>
+        <span class="ticker-tape-item"><span class="ticker-tape-sym">IONQ</span> <span class="ticker-tape-neg">-0.9%</span></span>
+        <span class="ticker-tape-item"><span class="ticker-tape-sym">TSM</span> <span class="ticker-tape-pos">+0.7%</span></span>
+      </div>
+      <button class="btn-refresh" onclick="reloadChart()">↻ Actualizar</button>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- ====== OVERVIEW ====== -->
+    <div id="sec-overview" class="section-page active">
+      <div class="summary-row">
+        <div class="summary-card" style="--accent-c: var(--accent);">
+          <div class="summary-label">Sectores cubiertos</div>
+          <div class="summary-value">8</div>
+          <div class="summary-sub">Supply → ETFs</div>
+        </div>
+        <div class="summary-card" style="--accent-c: var(--accent2);">
+          <div class="summary-label">Total de activos</div>
+          <div class="summary-value">50+</div>
+          <div class="summary-sub">Stocks + ETFs</div>
+        </div>
+        <div class="summary-card" style="--accent-c: var(--accent3);">
+          <div class="summary-label">Integración</div>
+          <div class="summary-value">TV Pro</div>
+          <div class="summary-sub">Gráficas en tiempo real</div>
+        </div>
+        <div class="summary-card" style="--accent-c: var(--red);">
+          <div class="summary-label">Riesgo promedio</div>
+          <div class="summary-value">Alto</div>
+          <div class="summary-sub">Mayoría especulativo</div>
+        </div>
+      </div>
+
+      <!-- MAIN CHART IN OVERVIEW -->
+      <div class="chart-panel" style="margin-bottom: 24px;">
+        <div class="chart-panel-head">
+          <span class="chart-panel-title">📊 Gráfica Principal — TradingView</span>
+          <div class="chart-tabs">
+            <button class="chart-tab active" onclick="setOverviewSymbol('NVDA',this)">NVDA</button>
+            <button class="chart-tab" onclick="setOverviewSymbol('PLTR',this)">PLTR</button>
+            <button class="chart-tab" onclick="setOverviewSymbol('IONQ',this)">IONQ</button>
+            <button class="chart-tab" onclick="setOverviewSymbol('TSM',this)">TSM</button>
+            <button class="chart-tab" onclick="setOverviewSymbol('MSFT',this)">MSFT</button>
+          </div>
+        </div>
+        <div class="chart-container" id="overview-chart" style="height:auto; padding: 32px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px; background:var(--bg3); min-height:200px;">
+          <div style="font-size:13px;color:var(--text2);font-family:var(--font-mono);">Selecciona un ticker para abrir en TradingView Pro</div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;">
+            <button class="chart-tab" onclick="openTV('NVDA')" style="font-size:13px;padding:10px 20px;">⚡ NVDA</button>
+            <button class="chart-tab" onclick="openTV('PLTR')" style="font-size:13px;padding:10px 20px;">⚡ PLTR</button>
+            <button class="chart-tab" onclick="openTV('IONQ')" style="font-size:13px;padding:10px 20px;">⚡ IONQ</button>
+            <button class="chart-tab" onclick="openTV('TSM')" style="font-size:13px;padding:10px 20px;">⚡ TSM</button>
+            <button class="chart-tab" onclick="openTV('MSFT')" style="font-size:13px;padding:10px 20px;">⚡ MSFT</button>
+          </div>
+          <div style="font-size:10px;color:var(--text3);font-family:var(--font-mono);">Abre fullscreen con tus indicadores guardados en TV Pro</div>
+        </div>
+      </div>
+
+      <!-- TV TICKER TAPE -->
+      <div class="chart-panel" style="margin-bottom: 24px;">
+        <div class="chart-panel-head">
+          <span class="chart-panel-title">📡 Ticker Tape — Mercado en Vivo</span>
+        </div>
+        <iframe
+          src="https://www.tradingview.com/widgetsnippet/ticker-tape/?symbols=NASDAQ:NVDA,NASDAQ:PLTR,NYSE:DELL,NASDAQ:MSFT,NASDAQ:GOOGL,NASDAQ:META,NYSE:TSM,NASDAQ:AMZN,NASDAQ:IONQ,NASDAQ:SOUN,NASDAQ:ACHR,NYSE:JOBY,NASDAQ:QUBT,NASDAQ:RGTI,NASDAQ:AI,NYSE:CRWV,NASDAQ:QBTS&theme=dark&locale=es&isTransparent=true"
+          style="width:100%; height:72px; border:none;">
+        </iframe>
+      </div>
+
+      <!-- MARKET OVERVIEW TV -->
+      <div class="tv-row">
+        <div class="tv-panel">
+          <div class="tv-panel-head">📈 Rendimiento de Mercado</div>
+          <iframe
+            src="https://www.tradingview.com/widgetsnippet/market-overview/?tabs=indices,commodities,forex&theme=dark&locale=es&isTransparent=true"
+            style="width:100%; height:340px; border:none;">
+          </iframe>
+        </div>
+        <div class="tv-panel">
+          <div class="tv-panel-head">🌡️ Mapa de Calor — S&amp;P 500</div>
+          <iframe
+            src="https://www.tradingview.com/widgetsnippet/stock-heatmap/?exchanges=NYSE,NASDAQ&dataSource=SPX500&blockSize=market_cap_basic&blockColor=change&locale=es&theme=dark&isTransparent=true"
+            style="width:100%; height:340px; border:none;">
+          </iframe>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====== CEREBRAS SUPPLY ====== -->
+    <div id="sec-cerebras" class="section-page">
+      <div class="cerebras-chain">
+        <div class="chain-label">CADENA DE SUMINISTRO</div>
+        <div class="chain-flow">
+          <div class="chain-node"><span>POWER</span>VICR</div>
+          <span class="chain-arrow">→</span>
+          <div class="chain-node"><span>OPTICAL</span>Whitefiber</div>
+          <span class="chain-arrow">→</span>
+          <div class="chain-node"><span>DC POWER</span>Digipower</div>
+          <span class="chain-arrow">→</span>
+          <div class="chain-node highlight"><span>CLIENTE</span>CEREBRAS</div>
+        </div>
+      </div>
+
+      <div class="cards-grid">
+        <!-- VICR -->
+        <div class="stock-card" onclick="openChart('VICR','Vicor Corporation')">
+          <div class="card-head">
+            <div>
+              <div class="card-ticker">VICR</div>
+              <div class="card-name">Vicor Corporation</div>
+            </div>
+            <div class="card-price">
+              <div class="price-val">~$44</div>
+              <div class="price-chg neg">Proveedor cotizado</div>
+            </div>
+          </div>
+          <div class="card-stats">
+            <div class="stat"><div class="stat-label">Market Cap</div><div class="stat-val">~$1.9B</div></div>
+            <div class="stat"><div class="stat-label">P/E</div><div class="stat-val">~55x</div></div>
+            <div class="stat"><div class="stat-label">Margen Bruto</div><div class="stat-val pos">~50%</div></div>
+            <div class="stat"><div class="stat-label">Revenue YoY</div><div class="stat-val neg">-8%</div></div>
+          </div>
+          <div class="risk-bar"><div class="risk-fill" style="width:72%;background:var(--accent3);"></div></div>
+          <div class="card-tags" style="margin-top:10px;">
+            <span class="tag tag-blue">Power Components</span>
+            <span class="tag tag-green">Nasdaq</span>
+          </div>
+          <div class="card-btn">Ver gráfica TradingView →</div>
+        </div>
+        <!-- Whitefiber -->
+        <div class="stock-card">
+          <div class="card-head">
+            <div>
+              <div class="card-ticker">WFBR</div>
+              <div class="card-name">Whitefiber Inc.</div>
+            </div>
+            <div class="card-price">
+              <div class="price-val">Privada</div>
+              <div class="price-chg neu">No cotiza</div>
+            </div>
+          </div>
+          <div class="card-stats">
+            <div class="stat"><div class="stat-label">Tipo</div><div class="stat-val">Startup</div></div>
+            <div class="stat"><div class="stat-label">Etapa</div><div class="stat-val">Series A</div></div>
+            <div class="stat"><div class="stat-label">Tecnología</div><div class="stat-val">Si-Photonics</div></div>
+            <div class="stat"><div class="stat-label">Bolsa</div><div class="stat-val neu">—</div></div>
+          </div>
+          <div class="risk-bar"><div class="risk-fill" style="width:95%;background:var(--red);"></div></div>
+          <div class="card-tags" style="margin-top:10px;">
+            <span class="tag tag-blue">Fotónica</span>
+            <span class="tag tag-red">No accesible</span>
+          </div>
+          <div class="card-btn" onclick="openChart('LITE','Lumentum — alternativa fotónica')">Alternativa: LITE (Lumentum) →</div>
+        </div>
+        <!-- Digipower -->
+        <div class="stock-card">
+          <div class="card-head">
+            <div>
+              <div class="card-ticker">DGPW</div>
+              <div class="card-name">Digipower Solutions</div>
+            </div>
+            <div class="card-price">
+              <div class="price-val">Privada</div>
+              <div class="price-chg neu">No cotiza</div>
+            </div>
+          </div>
+          <div class="card-stats">
+            <div class="stat"><div class="stat-label">Tipo</div><div class="stat-val">SME</div></div>
+            <div class="stat"><div class="stat-label">Foco</div><div class="stat-val">DC Power</div></div>
+            <div class="stat"><div class="stat-label">Mercado</div><div class="stat-val">AI HPC</div></div>
+            <div class="stat"><div class="stat-label">Bolsa</div><div class="stat-val neu">—</div></div>
+          </div>
+          <div class="risk-bar"><div class="risk-fill" style="width:90%;background:var(--red);"></div></div>
+          <div class="card-tags" style="margin-top:10px;">
+            <span class="tag tag-yellow">Power Mgmt</span>
+            <span class="tag tag-red">No accesible</span>
+          </div>
+          <div class="card-btn" onclick="openChart('VRT','Vertiv — alternativa power data center')">Alternativa: VRT (Vertiv) →</div>
+        </div>
+      </div>
+
+      <!-- Chart for selected -->
+      <div class="chart-panel" id="cerebras-chart-panel" style="display:none;">
+        <div class="chart-panel-head">
+          <span class="chart-panel-title" id="cerebras-chart-title">Gráfica</span>
+          <button class="chart-tab" onclick="document.getElementById('cerebras-chart-panel').style.display='none'">✕ Cerrar</button>
+        </div>
+        <div class="chart-container"><iframe id="cerebras-iframe" src="" allow="clipboard-write"></iframe></div>
+      </div>
+    </div>
+
+    <!-- ====== MEGA CAP ====== -->
+    <div id="sec-megacap" class="section-page">
+      <div class="cards-grid" id="megacap-cards"></div>
+      <div class="chart-panel" id="megacap-chart-panel" style="display:none;">
+        <div class="chart-panel-head">
+          <span class="chart-panel-title" id="megacap-chart-title">Gráfica</span>
+          <div class="chart-tabs" id="megacap-quick-tabs"></div>
+          <button class="chart-tab" onclick="document.getElementById('megacap-chart-panel').style.display='none'">✕</button>
+        </div>
+        <div class="chart-container"><iframe id="megacap-iframe" src="" allow="clipboard-write"></iframe></div>
+      </div>
+    </div>
+
+    <!-- ====== SMALL CAPS ====== -->
+    <div id="sec-smallcap" class="section-page">
+      <div class="cards-grid" id="smallcap-cards"></div>
+      <div class="chart-panel" id="smallcap-chart-panel" style="display:none;">
+        <div class="chart-panel-head">
+          <span class="chart-panel-title" id="smallcap-chart-title">Gráfica</span>
+          <button class="chart-tab" onclick="document.getElementById('smallcap-chart-panel').style.display='none'">✕</button>
+        </div>
+        <div class="chart-container"><iframe id="smallcap-iframe" src="" allow="clipboard-write"></iframe></div>
+      </div>
+    </div>
+
+    <!-- ====== AI INFRA ====== -->
+    <div id="sec-aiinfra" class="section-page">
+      <div class="cards-grid" id="aiinfra-cards"></div>
+      <div class="chart-panel" id="aiinfra-chart-panel" style="display:none;">
+        <div class="chart-panel-head">
+          <span class="chart-panel-title" id="aiinfra-chart-title">Gráfica</span>
+          <button class="chart-tab" onclick="document.getElementById('aiinfra-chart-panel').style.display='none'">✕</button>
+        </div>
+        <div class="chart-container"><iframe id="aiinfra-iframe" src="" allow="clipboard-write"></iframe></div>
+      </div>
+    </div>
+
+    <!-- ====== DEFENSE ====== -->
+    <div id="sec-defense" class="section-page">
+      <div class="cards-grid" id="defense-cards"></div>
+      <div class="chart-panel" id="defense-chart-panel" style="display:none;">
+        <div class="chart-panel-head">
+          <span class="chart-panel-title" id="defense-chart-title">Gráfica</span>
+          <button class="chart-tab" onclick="document.getElementById('defense-chart-panel').style.display='none'">✕</button>
+        </div>
+        <div class="chart-container"><iframe id="defense-iframe" src="" allow="clipboard-write"></iframe></div>
+      </div>
+    </div>
+
+    <!-- ====== QUANTUM ====== -->
+    <div id="sec-quantum" class="section-page">
+      <div class="cards-grid" id="quantum-cards"></div>
+      <div class="chart-panel" id="quantum-chart-panel" style="display:none;">
+        <div class="chart-panel-head">
+          <span class="chart-panel-title" id="quantum-chart-title">Gráfica</span>
+          <button class="chart-tab" onclick="document.getElementById('quantum-chart-panel').style.display='none'">✕</button>
+        </div>
+        <div class="chart-container"><iframe id="quantum-iframe" src="" allow="clipboard-write"></iframe></div>
+      </div>
+    </div>
+
+    <!-- ====== CHEAP ====== -->
+    <div id="sec-cheap" class="section-page">
+      <div class="cards-grid" id="cheap-cards"></div>
+      <div class="chart-panel" id="cheap-chart-panel" style="display:none;">
+        <div class="chart-panel-head">
+          <span class="chart-panel-title" id="cheap-chart-title">Gráfica</span>
+          <button class="chart-tab" onclick="document.getElementById('cheap-chart-panel').style.display='none'">✕</button>
+        </div>
+        <div class="chart-container"><iframe id="cheap-iframe" src="" allow="clipboard-write"></iframe></div>
+      </div>
+    </div>
+
+    <!-- ====== ETF ====== -->
+    <div id="sec-etf" class="section-page">
+      <div class="cards-grid" id="etf-cards"></div>
+      <div class="chart-panel" id="etf-chart-panel" style="display:none;">
+        <div class="chart-panel-head">
+          <span class="chart-panel-title" id="etf-chart-title">Gráfica</span>
+          <button class="chart-tab" onclick="document.getElementById('etf-chart-panel').style.display='none'">✕</button>
+        </div>
+        <div class="chart-container"><iframe id="etf-iframe" src="" allow="clipboard-write"></iframe></div>
+      </div>
+    </div>
+
+    <!-- ====== CHART DEDICADO ====== -->
+    <div id="sec-chart" class="section-page">
+      <div class="sec-header" style="margin-bottom:16px;">
+        <span class="sec-title">🖥️ Gráfica Avanzada — TradingView Pro</span>
+      </div>
+
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;" id="chart-symbol-btns">
+        <!-- generado por JS -->
+      </div>
+
+      <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;" id="chart-interval-btns">
+        <button class="chart-tab active" onclick="setChartInterval('1D',this)">1D</button>
+        <button class="chart-tab" onclick="setChartInterval('1W',this)">1W</button>
+        <button class="chart-tab" onclick="setChartInterval('1M',this)">1M</button>
+        <button class="chart-tab" onclick="setChartInterval('60',this)">1H</button>
+        <button class="chart-tab" onclick="setChartInterval('15',this)">15M</button>
+      </div>
+
+      <div class="chart-panel">
+        <div class="chart-panel-head">
+          <span class="chart-panel-title" id="main-chart-label">NVDA — Advanced Chart</span>
+        </div>
+        <div class="chart-container" style="height:auto;padding:32px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;background:var(--bg3);min-height:200px;">
+          <div style="font-size:13px;color:var(--text2);font-family:var(--font-mono);" id="main-chart-label">Selecciona símbolo e intervalo → abre en TV Pro</div>
+          <button onclick="openTV(currentChartSymbol, currentChartInterval)" style="padding:14px 32px;background:rgba(0,229,160,0.1);border:1px solid rgba(0,229,160,0.4);border-radius:10px;color:var(--accent);font-family:var(--font-mono);font-size:14px;cursor:pointer;transition:all 0.2s;">
+            ⚡ Abrir en TradingView Pro Fullscreen
+          </button>
+          <div style="font-size:10px;color:var(--text3);font-family:var(--font-mono);">Con todos tus layouts, indicadores y alertas guardadas</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====== NOTICIAS ====== -->
+    <div id="sec-news" class="section-page">
+      <div class="sec-header">
+        <span class="sec-title">📰 Noticias — TradingView Feed</span>
+      </div>
+      <div class="chart-panel" style="margin-bottom:24px;">
+        <div class="chart-panel-head">
+          <span class="chart-panel-title">Noticias en tiempo real del portafolio</span>
+        </div>
+        <iframe
+          src="https://www.tradingview.com/widgetsnippet/timeline/?feedMode=market&market=stock&isTransparent=true&displayMode=adaptive&width=100%25&height=550&locale=es&colorTheme=dark"
+          style="width:100%; height:550px; border:none;">
+        </iframe>
+      </div>
+      <div class="chart-panel">
+        <div class="chart-panel-head">
+          <span class="chart-panel-title">Noticias por símbolo — Selecciona uno</span>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            <button class="chart-tab active" onclick="setNewsSymbol('NVDA',this)">NVDA</button>
+            <button class="chart-tab" onclick="setNewsSymbol('PLTR',this)">PLTR</button>
+            <button class="chart-tab" onclick="setNewsSymbol('IONQ',this)">IONQ</button>
+            <button class="chart-tab" onclick="setNewsSymbol('SOUN',this)">SOUN</button>
+            <button class="chart-tab" onclick="setNewsSymbol('QUBT',this)">QUBT</button>
+            <button class="chart-tab" onclick="setNewsSymbol('ACHR',this)">ACHR</button>
+          </div>
+        </div>
+        <iframe id="news-symbol-iframe"
+          src="https://www.tradingview.com/widgetsnippet/timeline/?feedMode=symbol&symbol=NVDA&isTransparent=true&displayMode=adaptive&locale=es&colorTheme=dark"
+          style="width:100%; height:450px; border:none;">
+        </iframe>
+      </div>
+    </div>
+
+    <!-- ====== WATCHLIST ====== -->
+    <div id="sec-watchlist" class="section-page">
+      <div class="sec-header">
+        <span class="sec-title">📋 Watchlist Completa</span>
+        <span class="sec-tag">50+ activos</span>
+      </div>
+
+      <!-- TV Screener -->
+      <div class="chart-panel" style="margin-bottom:24px;">
+        <div class="chart-panel-head">
+          <span class="chart-panel-title">🔍 Screener — TradingView</span>
+        </div>
+        <iframe
+          src="https://www.tradingview.com/widgetsnippet/screener/?width=100%25&height=500&defaultColumn=overview&defaultScreen=most_capitalized&market=america&showToolbar=true&locale=es&colorTheme=dark&isTransparent=true"
+          style="width:100%; height:500px; border:none;">
+        </iframe>
+      </div>
+
+      <!-- TABLE -->
+      <div class="chart-panel">
+        <div class="chart-panel-head">
+          <span class="chart-panel-title">Lista de referencia del portafolio</span>
+        </div>
+        <div style="overflow-x:auto; padding:0 4px 4px;">
+          <table class="watchlist-table" id="watchlist-table">
+            <thead>
+              <tr>
+                <th>Ticker</th>
+                <th>Empresa</th>
+                <th>Sector</th>
+                <th>Market Cap</th>
+                <th>P/E</th>
+                <th>Riesgo</th>
+                <th>Gráfica</th>
+              </tr>
+            </thead>
+            <tbody id="watchlist-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ====== GRÁFICA TV EMBEBIDA ====== -->
+    <div id="sec-chart" class="section-page">
+      <div class="sec-header" style="margin-bottom:16px;">
+        <span class="sec-title">🖥️ Gráfica TradingView — En Vivo</span>
+      </div>
+      <div class="chart-panel">
+        <div class="chart-panel-head">
+          <span class="chart-panel-title" id="tv-chart-label">NVDA — Gráfica en vivo</span>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+            <input id="tv-symbol-input" class="form-input" placeholder="Ej: IONQ" style="width:90px;padding:5px 8px;font-size:11px;" onkeydown="if(event.key==='Enter')loadTVChart()">
+            <button class="chart-tab active" onclick="setTVInterval('D',this)">1D</button>
+            <button class="chart-tab" onclick="setTVInterval('W',this)">1W</button>
+            <button class="chart-tab" onclick="setTVInterval('M',this)">1M</button>
+            <button class="chart-tab" onclick="setTVInterval('60',this)">1H</button>
+            <button class="chart-tab" onclick="setTVInterval('15',this)">15m</button>
+            <button class="ask-btn" style="padding:5px 12px;font-size:11px;" onclick="loadTVChart()">Cargar →</button>
+          </div>
+        </div>
+        <div style="display:flex;gap:6px;padding:10px 18px;border-bottom:1px solid var(--border);flex-wrap:wrap;">
+          <button class="chart-tab active" onclick="quickTV('NVDA',this)">NVDA</button>
+          <button class="chart-tab" onclick="quickTV('PLTR',this)">PLTR</button>
+          <button class="chart-tab" onclick="quickTV('IONQ',this)">IONQ</button>
+          <button class="chart-tab" onclick="quickTV('TSM',this)">TSM</button>
+          <button class="chart-tab" onclick="quickTV('MSFT',this)">MSFT</button>
+          <button class="chart-tab" onclick="quickTV('SOUN',this)">SOUN</button>
+          <button class="chart-tab" onclick="quickTV('ACHR',this)">ACHR</button>
+          <button class="chart-tab" onclick="quickTV('QUBT',this)">QUBT</button>
+          <button class="chart-tab" onclick="quickTV('VRT',this)">VRT</button>
+          <button class="chart-tab" onclick="quickTV('DELL',this)">DELL</button>
+          <button class="chart-tab" onclick="quickTV('AVAV',this)">AVAV</button>
+          <button class="chart-tab" onclick="quickTV('META',this)">META</button>
+        </div>
+        <div class="tv-embed-wrap">
+          <iframe id="tv-main-iframe"
+            src="https://www.tradingview.com/widgetsnippet/symbol/NVDA/?theme=dark&locale=es&interval=D&studies=RSI@tv-basicstudies,MACD@tv-basicstudies,BB@tv-basicstudies,VWAP@tv-basicstudies"
+            allow="clipboard-write">
+          </iframe>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====== MIS TRADES ====== -->
+    <div id="sec-trades" class="section-page">
+      <div class="sec-header">
+        <span class="sec-title">📒 Mis Trades</span>
+        <div style="display:flex;gap:8px;">
+          <button class="ask-btn" onclick="exportTradesCSV()" style="padding:6px 14px;font-size:11px;">⬇ Exportar CSV</button>
+          <label class="ask-btn" style="padding:6px 14px;font-size:11px;cursor:pointer;">⬆ Importar CSV<input type="file" accept=".csv" onchange="importTradesCSV(event)" style="display:none"></label>
+          <button class="ask-btn" onclick="openTradeModal()" style="padding:6px 14px;font-size:11px;background:rgba(0,229,160,.1);border-color:rgba(0,229,160,.3);color:var(--accent);">+ Nuevo Trade</button>
+        </div>
+      </div>
+
+      <div class="filter-bar">
+        <span style="font-size:10px;font-family:var(--font-mono);color:var(--text3);">FILTRAR:</span>
+        <button class="filter-btn active" onclick="filterTrades('all',this)">Todo</button>
+        <button class="filter-btn" onclick="filterTrades('today',this)">Hoy</button>
+        <button class="filter-btn" onclick="filterTrades('week',this)">Esta semana</button>
+        <button class="filter-btn" onclick="filterTrades('month',this)">Este mes</button>
+        <button class="filter-btn" onclick="filterTrades('open',this)">Abiertas</button>
+        <button class="filter-btn" onclick="filterTrades('closed',this)">Cerradas</button>
+        <input class="form-input" id="trade-search" placeholder="Buscar ticker..." style="width:130px;padding:5px 10px;font-size:11px;margin-left:8px;" oninput="filterTrades('search',null)">
+      </div>
+
+      <div class="chart-panel">
+        <div style="overflow-x:auto;">
+          <table class="trades-table">
+            <thead>
+              <tr>
+                <th>Ticker</th>
+                <th>Empresa</th>
+                <th>Fecha</th>
+                <th>Hora</th>
+                <th>Entrada $</th>
+                <th>Acciones</th>
+                <th>Invertido</th>
+                <th>Target $</th>
+                <th>Stop $</th>
+                <th>Precio actual</th>
+                <th>P&amp;L $</th>
+                <th>P&amp;L %</th>
+                <th>Estado</th>
+                <th>Notas</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="trades-tbody">
+              <tr><td colspan="15" style="text-align:center;padding:32px;color:var(--text3);font-family:var(--font-mono);font-size:12px;">Sin trades registrados. Haz clic en "+ Nuevo Trade" para agregar.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====== REPORTE P&L ====== -->
+    <div id="sec-reporte" class="section-page">
+      <div class="sec-header">
+        <span class="sec-title">📊 Reporte de Rendimientos</span>
+        <div style="display:flex;gap:8px;">
+          <button class="filter-btn active" onclick="filterReporte('all',this)">Todo</button>
+          <button class="filter-btn" onclick="filterReporte('week',this)">Semana</button>
+          <button class="filter-btn" onclick="filterReporte('month',this)">Mes</button>
+        </div>
+      </div>
+
+      <div class="pl-grid" id="pl-summary">
+        <div class="pl-card"><div class="pl-val" id="pl-total" style="color:var(--accent)">$0.00</div><div class="pl-lbl">P&amp;L Total</div></div>
+        <div class="pl-card"><div class="pl-val" id="pl-pct" style="color:var(--accent)">0.00%</div><div class="pl-lbl">Retorno %</div></div>
+        <div class="pl-card"><div class="pl-val" id="pl-invertido">$0.00</div><div class="pl-lbl">Capital Invertido</div></div>
+        <div class="pl-card"><div class="pl-val" id="pl-trades-count">0</div><div class="pl-lbl">Trades Totales</div></div>
+        <div class="pl-card"><div class="pl-val" id="pl-ganadores" style="color:var(--accent)">0</div><div class="pl-lbl">Ganadores</div></div>
+        <div class="pl-card"><div class="pl-val" id="pl-perdedores" style="color:var(--red)">0</div><div class="pl-lbl">Perdedores</div></div>
+        <div class="pl-card"><div class="pl-val" id="pl-win-rate">0%</div><div class="pl-lbl">Win Rate</div></div>
+        <div class="pl-card"><div class="pl-val" id="pl-mejor" style="color:var(--accent)">$0</div><div class="pl-lbl">Mejor Trade</div></div>
+      </div>
+
+      <div class="chart-panel">
+        <div class="chart-panel-head"><span class="chart-panel-title">Detalle por trade</span></div>
+        <div style="overflow-x:auto;">
+          <table class="trades-table">
+            <thead>
+              <tr>
+                <th>Ticker</th>
+                <th>Fecha entrada</th>
+                <th>Entrada $</th>
+                <th>Precio actual $</th>
+                <th>Acciones</th>
+                <th>Invertido</th>
+                <th>P&amp;L $</th>
+                <th>P&amp;L %</th>
+                <th>R/R Ratio</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody id="reporte-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====== AGREGAR ACCIÓN ====== -->
+    <div id="sec-agregar" class="section-page">
+      <div class="sec-header">
+        <span class="sec-title">➕ Agregar Acción al Portafolio</span>
+        <div style="display:flex;gap:8px;">
+          <button class="ask-btn" onclick="exportAddedCSV()" style="padding:6px 14px;font-size:11px;">⬇ Exportar CSV</button>
+          <label class="ask-btn" style="padding:6px 14px;font-size:11px;cursor:pointer;">⬆ Importar CSV<input type="file" accept=".csv" onchange="importAddedCSV(event)" style="display:none"></label>
+        </div>
+      </div>
+
+      <!-- ADD FORM -->
+      <div class="chart-panel" style="margin-bottom:20px;">
+        <div class="chart-panel-head"><span class="chart-panel-title">Nueva acción</span></div>
+        <div style="padding:20px;">
+          <div class="form-grid" style="margin-bottom:14px;">
+            <div class="form-group">
+              <label class="form-label">Ticker *</label>
+              <input class="form-input" id="add-ticker" placeholder="Ej: IONQ" style="text-transform:uppercase;">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Empresa *</label>
+              <input class="form-input" id="add-nombre" placeholder="Ej: IonQ Inc.">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Sector</label>
+              <input class="form-input" id="add-sector" placeholder="Ej: Quantum Computing">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Categoría</label>
+              <select class="form-input" id="add-cat">
+                <option value="megacap">Mega Cap</option>
+                <option value="smallcap">Small Cap</option>
+                <option value="aiinfra">AI Infrastructure</option>
+                <option value="defense">Defense & Tech</option>
+                <option value="quantum">Quantum</option>
+                <option value="cheap">Cheaper Stocks</option>
+                <option value="etf">ETF</option>
+                <option value="custom">Personalizada</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Precio ref. $</label>
+              <input class="form-input" id="add-precio" placeholder="Ej: 35.00" type="number" step="0.01">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Market Cap</label>
+              <input class="form-input" id="add-mc" placeholder="Ej: ~$7B">
+            </div>
+            <div class="form-group">
+              <label class="form-label">P/E Ratio</label>
+              <input class="form-input" id="add-pe" placeholder="Ej: 45x o N/A">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Riesgo (1-100)</label>
+              <input class="form-input" id="add-riesgo" placeholder="Ej: 75" type="number" min="1" max="100">
+            </div>
+          </div>
+          <div class="form-group" style="margin-bottom:14px;">
+            <label class="form-label">Notas / Tesis de inversión</label>
+            <textarea class="form-input form-textarea" id="add-notas" placeholder="¿Por qué la agregas? Catalizadores, riesgos..."></textarea>
+          </div>
+          <div style="display:flex;gap:10px;">
+            <button class="ask-btn" onclick="addCustomStock()" style="padding:9px 24px;font-size:12px;background:rgba(0,229,160,.1);border-color:rgba(0,229,160,.3);color:var(--accent);">✓ Agregar al Portafolio</button>
+            <button class="ask-btn" onclick="clearAddForm()" style="padding:9px 18px;font-size:12px;">Limpiar</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- FILTER BY TIME -->
+      <div class="filter-bar">
+        <span style="font-size:10px;font-family:var(--font-mono);color:var(--text3);">FILTRAR POR:</span>
+        <button class="filter-btn active" onclick="filterAdded('all',this)">Todo</button>
+        <button class="filter-btn" onclick="filterAdded('today',this)">Hoy</button>
+        <button class="filter-btn" onclick="filterAdded('week',this)">Esta semana</button>
+        <button class="filter-btn" onclick="filterAdded('month',this)">Este mes</button>
+      </div>
+
+      <!-- ADDED STOCKS GRID -->
+      <div class="added-grid" id="added-grid">
+        <div style="grid-column:1/-1;text-align:center;padding:32px;color:var(--text3);font-family:var(--font-mono);font-size:12px;">
+          Aún no has agregado acciones. Usa el formulario de arriba.
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</main>
+
+<script>
+// ===================== DATA =====================
+const PORTFOLIO = {
+  megacap: [
+    {t:'AMZN',n:'Amazon',s:'Cloud / E-Commerce',p:'~$193',mc:'~$2.0T',pe:'~43x',mg:'~49%',yoy:'+11%',risk:45,tags:['Large Cap','Cloud','AI']},
+    {t:'MSFT',n:'Microsoft',s:'Cloud / Software',p:'~$420',mc:'~$3.1T',pe:'~35x',mg:'~69%',yoy:'+16%',risk:35,tags:['Large Cap','Cloud','AI']},
+    {t:'GOOGL',n:'Alphabet',s:'Ads / Cloud / AI',p:'~$172',mc:'~$2.1T',pe:'~23x',mg:'~57%',yoy:'+13%',risk:38,tags:['Large Cap','AI','Ads']},
+    {t:'META',n:'Meta Platforms',s:'Social / AI / AR',p:'~$582',mc:'~$1.5T',pe:'~28x',mg:'~82%',yoy:'+19%',risk:42,tags:['Large Cap','AI','Social']},
+    {t:'TSM',n:'TSMC',s:'Semiconductores',p:'~$175',mc:'~$910B',pe:'~24x',mg:'~55%',yoy:'+37%',risk:50,tags:['Semis','AI','Foundry']},
+    {t:'NVDA',n:'NVIDIA Corporation',s:'AI / GPUs / Data Center',p:'~$128',mc:'~$3.1T',pe:'~45x',mg:'~75%',yoy:'+122%',risk:55,tags:['AI','GPUs','Semis']},
+  ],
+  smallcap: [
+    {t:'OUST',n:'Ouster Inc.',s:'LiDAR / Sensors',p:'~$6',mc:'~$650M',pe:'N/A',mg:'~30%',yoy:'—',risk:78,tags:['LiDAR','Sensors','AV']},
+    {t:'INFY',n:'Infosys Ltd.',s:'IT Services / India',p:'~$18',mc:'~$75B',pe:'~24x',mg:'~31%',yoy:'+4%',risk:35,tags:['IT Services','India','Blue chip']},
+    {t:'CHK',n:'Chesapeake Energy',s:'E&P Natural Gas',p:'~$67',mc:'~$9B',pe:'~10x',mg:'~45%',yoy:'-12%',risk:60,tags:['Energy','Gas','Restrukt.']},
+    {t:'REVB',n:'Revelation Biosciences',s:'Biotech',p:'~$2',mc:'~$20M',pe:'N/A',mg:'—',yoy:'—',risk:95,tags:['Biotech','Micro cap','Especulativo']},
+    {t:'STIM',n:'Neuronetics (STIM)',s:'MedTech / TMS',p:'~$4',mc:'~$60M',pe:'N/A',mg:'~65%',yoy:'+8%',risk:80,tags:['MedTech','TMS','Small cap']},
+    {t:'TORM',n:'TORM plc',s:'Shipping / Tankers',p:'~$24',mc:'~$1.8B',pe:'~5x',mg:'~45%',yoy:'-20%',risk:62,tags:['Shipping','Dividendo ~12%','Value']},
+  ],
+  aiinfra: [
+    {t:'DELL',n:'Dell Technologies',s:'AI Servers / HW',p:'~$115',mc:'~$80B',pe:'~20x',mg:'~22%',yoy:'+8%',risk:48,tags:['AI Servers','Enterprise','HW']},
+    {t:'VRT',n:'Vertiv Holdings',s:'Data Center Power',p:'~$115',mc:'~$45B',pe:'~55x',mg:'~35%',yoy:'+15%',risk:58,tags:['Cooling','Power','Data Center']},
+    {t:'NBIS',n:'Nebius Group',s:'AI Cloud Infra',p:'~$38',mc:'~$9B',pe:'N/A',mg:'—',yoy:'—',risk:72,tags:['AI Cloud','Ex-Yandex','Especulativo']},
+    {t:'CRWV',n:'CoreWeave Inc.',s:'GPU Cloud / AI',p:'~$54',mc:'~$23B',pe:'N/A',mg:'—',yoy:'—',risk:75,tags:['GPU Cloud','IPO 2025','AI Infra']},
+    {t:'IREN',n:'Iris Energy',s:'BTC Mining / AI HPC',p:'~$12',mc:'~$1.5B',pe:'N/A',mg:'—',yoy:'+80%',risk:80,tags:['Bitcoin','AI HPC','Minería']},
+    {t:'HUT',n:'Hut 8 Corp',s:'BTC Mining / AI HPC',p:'~$18',mc:'~$2.0B',pe:'N/A',mg:'—',yoy:'+60%',risk:80,tags:['Bitcoin','AI HPC','Minería']},
+  ],
+  defense: [
+    {t:'LTRX',n:'Lantronix Inc.',s:'IoT / Edge Computing',p:'~$5',mc:'~$170M',pe:'N/A',mg:'~50%',yoy:'-5%',risk:72,tags:['IoT','Edge','Small cap']},
+    {t:'DPRO',n:'Draganfly Inc.',s:'Drones Comerciales',p:'~$2',mc:'~$15M',pe:'N/A',mg:'—',yoy:'—',risk:95,tags:['Drones','Micro cap','Especulativo']},
+    {t:'KRKNF',n:'Kraken Robotics',s:'Marine Drones / Sonar',p:'~$2',mc:'~$400M',pe:'N/A',mg:'~45%',yoy:'+40%',risk:70,tags:['Marine','Defensa','Drones']},
+    {t:'ONDS',n:'Ondas Holdings',s:'Drones / Rail AI',p:'~$3',mc:'~$100M',pe:'N/A',mg:'—',yoy:'—',risk:85,tags:['Drones DoD','Rail AI','Small cap']},
+    {t:'RTX',n:'RTX Corp (Raytheon)',s:'Defensa / Aeroespacial',p:'~$132',mc:'~$175B',pe:'~20x',mg:'~24%',yoy:'+9%',risk:35,tags:['Defensa','Blue chip','Dividendo']},
+    {t:'KTOS',n:'Kratos Defense',s:'Drones Tácticos / Defensa',p:'~$30',mc:'~$5B',pe:'~100x',mg:'~26%',yoy:'+18%',risk:65,tags:['Drones tácticos','DoD','Growth']},
+    {t:'PLTR',n:'Palantir Technologies',s:'AI / Gobierno / Defensa',p:'~$120',mc:'~$260B',pe:'~200x',mg:'~80%',yoy:'+36%',risk:60,tags:['AI Gov','Defensa','Growth']},
+    {t:'LHX',n:'L3Harris Technologies',s:'Electrónica Militar',p:'~$235',mc:'~$44B',pe:'~19x',mg:'~23%',yoy:'+5%',risk:38,tags:['Defensa','Electrónica','Dividendo']},
+    {t:'NOC',n:'Northrop Grumman',s:'Aeroespacial / Defensa',p:'~$480',mc:'~$72B',pe:'~16x',mg:'~24%',yoy:'+7%',risk:33,tags:['B-21','Defensa','Blue chip']},
+    {t:'AVAV',n:'AeroVironment',s:'Drones Militares',p:'~$185',mc:'~$5B',pe:'~60x',mg:'~40%',yoy:'+22%',risk:62,tags:['Switchblade','Drones','DoD']},
+  ],
+  quantum: [
+    {t:'QUBT',n:'Quantum Computing Inc.',s:'Quantum Software',p:'~$17',mc:'~$2.5B',pe:'N/A',mg:'—',yoy:'—',risk:90,tags:['Quantum','Especulativo','Prebénéficio']},
+    {t:'LUMN',n:'Lumen Technologies',s:'Telecom / Fiber',p:'~$6',mc:'~$6B',pe:'N/A',mg:'~50%',yoy:'-15%',risk:82,tags:['Telecom','Reestructuración','Deuda']},
+    {t:'TE',n:'Tronox Holdings (TE)',s:'Materiales / Titanium',p:'~$9',mc:'~$1.4B',pe:'N/A',mg:'~20%',yoy:'-5%',risk:68,tags:['Materiales','Titanio','Cíclico']},
+    {t:'JOBY',n:'Joby Aviation',s:'eVTOL / Air Taxi',p:'~$7',mc:'~$5B',pe:'N/A',mg:'—',yoy:'—',risk:85,tags:['eVTOL','FAA','Pre-revenue']},
+  ],
+  cheap: [
+    {t:'IONQ',n:'IonQ Inc.',s:'Quantum Computing',p:'~$35',mc:'~$7B',pe:'N/A',mg:'—',yoy:'+80%',risk:85,tags:['Quantum','Líder','Especulativo']},
+    {t:'RGTI',n:'Rigetti Computing',s:'Quantum Hardware',p:'~$12',mc:'~$1.5B',pe:'N/A',mg:'—',yoy:'—',risk:88,tags:['Quantum HW','QPU propio','Especulativo']},
+    {t:'QS',n:'QuantumScape',s:'Solid-State Battery',p:'~$6',mc:'~$2B',pe:'N/A',mg:'—',yoy:'—',risk:88,tags:['Batería SS','VW','Pre-revenue']},
+    {t:'LIDR',n:'AEye Inc.',s:'LiDAR / AV',p:'~$1',mc:'~$40M',pe:'N/A',mg:'—',yoy:'—',risk:95,tags:['LiDAR','Micro cap','Especulativo']},
+    {t:'BLNK',n:'Blink Charging',s:'EV Charging Network',p:'~$3',mc:'~$160M',pe:'N/A',mg:'~25%',yoy:'+12%',risk:85,tags:['EV','Charging','Disruptivo']},
+    {t:'CHPT',n:'ChargePoint Holdings',s:'EV Charging Líder',p:'~$1.5',mc:'~$600M',pe:'N/A',mg:'~25%',yoy:'+10%',risk:82,tags:['EV','Charging','Líder USA']},
+    {t:'SMR',n:'NuScale Power',s:'Nuclear SMR',p:'~$25',mc:'~$3B',pe:'N/A',mg:'—',yoy:'—',risk:80,tags:['Nuclear','SMR','Energía AI']},
+    {t:'PLTR',n:'Palantir Technologies',s:'AI / Defensa / Gov',p:'~$120',mc:'~$260B',pe:'~200x',mg:'~80%',yoy:'+36%',risk:58,tags:['AI','Defensa','Premium']},
+    {t:'AI',n:'C3.ai Inc.',s:'Enterprise AI',p:'~$27',mc:'~$3.5B',pe:'N/A',mg:'~60%',yoy:'+20%',risk:78,tags:['Enterprise AI','SaaS','Especulativo']},
+    {t:'QBTS',n:'D-Wave Quantum',s:'Quantum Annealing',p:'~$8',mc:'~$1.5B',pe:'N/A',mg:'—',yoy:'—',risk:90,tags:['Quantum','Annealing','Especulativo']},
+    {t:'JOBY',n:'Joby Aviation',s:'eVTOL / Air Taxi',p:'~$7',mc:'~$5B',pe:'N/A',mg:'—',yoy:'—',risk:85,tags:['eVTOL','FAA','Disruptivo']},
+    {t:'SES',n:'Solid Power Inc.',s:'Solid-State Battery',p:'~$2',mc:'~$350M',pe:'N/A',mg:'—',yoy:'—',risk:90,tags:['Batería SS','BMW','Ford']},
+    {t:'SOUN',n:'SoundHound AI',s:'Voice AI / Speech',p:'~$12',mc:'~$4B',pe:'N/A',mg:'~60%',yoy:'+73%',risk:80,tags:['Voice AI','AI','Growth']},
+    {t:'ACHR',n:'Archer Aviation',s:'eVTOL / Air Taxi',p:'~$8',mc:'~$3.5B',pe:'N/A',mg:'—',yoy:'—',risk:85,tags:['eVTOL','Midnight','USAF']},
+    {t:'BBAI',n:'BigBear.ai',s:'AI / Analytics Gov',p:'~$4',mc:'~$900M',pe:'N/A',mg:'—',yoy:'+35%',risk:82,tags:['AI Gov','Analytics','Defensa']},
+  ],
+  etf: [
+    {t:'BOTZ',n:'Global X Robotics & AI ETF',s:'AI / Robotics / Diversificado',p:'~$29',mc:'~$2.5B',pe:'N/A',mg:'0.68% ER',yoy:'+28%',risk:52,tags:['ETF','AI','Robotics']},
+    {t:'ARKQ',n:'ARK Autonomous Tech ETF',s:'Autonomous / AI / EV',p:'~$70',mc:'~$800M',pe:'N/A',mg:'0.75% ER',yoy:'+22%',risk:65,tags:['ETF','Cathie Wood','Thematic']},
+    {t:'SOXX',n:'iShares Semiconductor ETF',s:'Semiconductores',p:'~$200',mc:'~$12B',pe:'~28x',mg:'0.35% ER',yoy:'+18%',risk:55,tags:['ETF','Semis','Core']},
+    {t:'QTUM',n:'Defiance Quantum ETF',s:'Quantum Computing',p:'~$65',mc:'~$300M',pe:'N/A',mg:'0.40% ER',yoy:'+35%',risk:72,tags:['ETF','Quantum','Thematic']},
+    {t:'ITA',n:'iShares US Aerospace & Defense',s:'Defensa / Aeroespacial',p:'~$150',mc:'~$6B',pe:'~22x',mg:'0.40% ER',yoy:'+12%',risk:42,tags:['ETF','Defensa','Dividendo']},
+  ],
+};
+
+const ALL_SYMBOLS = [
+  'VICR','AMZN','MSFT','GOOGL','META','TSM','NVDA',
+  'OUST','INFY','CHK','STIM','TORM',
+  'DELL','VRT','NBIS','CRWV','IREN','HUT',
+  'LTRX','ONDS','RTX','KTOS','PLTR','LHX','NOC','AVAV',
+  'QUBT','LUMN','JOBY','IONQ','RGTI','QS','BLNK','CHPT','SMR',
+  'AI','QBTS','SES','SOUN','ACHR','BBAI','BOTZ','ARKQ','SOXX'
+];
+
+const RISK_COLOR = r => r < 50 ? '#00e5a0' : r < 70 ? '#f0c040' : '#ff4d6d';
+
+// ===================== RENDER CARDS =====================
+function renderCards(containerId, data, sectionKey) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  el.innerHTML = data.map(s => `
+    <div class="stock-card" onclick="openTV('${s.t}')" style="cursor:pointer;">
+      <div class="card-head">
+        <div><div class="card-ticker">${s.t}</div><div class="card-name">${s.n}</div></div>
+        <div class="card-price">
+          <div class="price-val">${s.p}</div>
+          <div class="price-chg ${s.yoy && s.yoy.startsWith('+') ? 'pos' : s.yoy && s.yoy.startsWith('-') ? 'neg' : 'neu'}">${s.yoy || '—'} YoY</div>
+        </div>
+      </div>
+      <div class="card-stats">
+        <div class="stat"><div class="stat-label">Market Cap</div><div class="stat-val">${s.mc}</div></div>
+        <div class="stat"><div class="stat-label">P/E</div><div class="stat-val">${s.pe}</div></div>
+        <div class="stat"><div class="stat-label">Mg. Bruto</div><div class="stat-val">${s.mg}</div></div>
+        <div class="stat"><div class="stat-label">Sector</div><div class="stat-val" style="font-size:10px;">${s.s.split('/')[0].trim()}</div></div>
+      </div>
+      <div class="risk-bar">
+        <div class="risk-fill" style="width:${s.risk}%;background:${RISK_COLOR(s.risk)};"></div>
+      </div>
+      <div style="font-size:9px;font-family:var(--font-mono);color:var(--text3);margin-top:4px;">RIESGO: ${s.risk}/100</div>
+      <div class="card-tags" style="margin-top:10px;">
+        ${s.tags.map(tg => `<span class="tag">${tg}</span>`).join('')}
+      </div>
+      <div class="card-btn">⚡ Abrir en TradingView Pro →</div>
+    </div>
+  `).join('');
+}
+
+function openSectionChart(section, symbol, name) {
+  openTV(symbol);
+}
+
+// ===================== TV URL =====================
+// Opens TradingView Pro fullscreen chart directly
+function tvUrl(symbol, interval) {
+  const iv = interval || 'D';
+  return `https://www.tradingview.com/chart/?symbol=${encodeURIComponent(symbol)}&interval=${iv}`;
+}
+
+function openTV(symbol, interval) {
+  const iv = interval || 'D';
+  window.open(`https://www.tradingview.com/chart/?symbol=${encodeURIComponent(symbol)}&interval=${iv}`, '_blank');
+}
+
+function openChart(symbol, name) {
+  openTV(symbol);
+}
+
+// ===================== OVERVIEW CHART =====================
+function setOverviewSymbol(sym, btn) {
+  document.querySelectorAll('#sec-overview .chart-tabs .chart-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  openTV(sym);
+}
+
+// ===================== MAIN CHART (chart section) =====================
+let currentChartSymbol = 'NVDA';
+let currentChartInterval = 'D';
+
+function buildChartSymbolBtns() {
+  const container = document.getElementById('chart-symbol-btns');
+  if (!container) return;
+  const symbols = ['NVDA','PLTR','IONQ','SOUN','ACHR','QUBT','TSM','MSFT','BOTZ','DELL','VRT','AVAV','RTX','KTOS'];
+  container.innerHTML = symbols.map(s =>
+    `<button class="chart-tab${s==='NVDA'?' active':''}" onclick="setMainChartSymbol('${s}',this)">${s}</button>`
+  ).join('');
+}
+
+function setMainChartSymbol(sym, btn) {
+  currentChartSymbol = sym;
+  document.querySelectorAll('#chart-symbol-btns .chart-tab').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  document.getElementById('main-chart-label').textContent = sym + ' — Abriendo en TradingView Pro...';
+  openTV(sym, currentChartInterval);
+}
+
+function setChartInterval(iv, btn) {
+  currentChartInterval = iv;
+  document.querySelectorAll('#chart-interval-btns .chart-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  openTV(currentChartSymbol, iv);
+}
+
+// ===================== NEWS =====================
+function setNewsSymbol(sym, btn) {
+  document.querySelectorAll('#sec-news .chart-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('news-symbol-iframe').src =
+    `https://www.tradingview.com/widgetsnippet/timeline/?feedMode=symbol&symbol=${sym}&isTransparent=true&displayMode=adaptive&locale=es&colorTheme=dark`;
+}
+
+// ===================== WATCHLIST TABLE =====================
+function buildWatchlist() {
+  const all = [
+    ...PORTFOLIO.megacap.map(s=>({...s,cat:'Mega Cap'})),
+    ...PORTFOLIO.smallcap.map(s=>({...s,cat:'Small Cap'})),
+    ...PORTFOLIO.aiinfra.map(s=>({...s,cat:'AI Infra'})),
+    ...PORTFOLIO.defense.map(s=>({...s,cat:'Defense'})),
+    ...PORTFOLIO.quantum.map(s=>({...s,cat:'Quantum'})),
+    ...PORTFOLIO.cheap.map(s=>({...s,cat:'Disruptivo'})),
+    ...PORTFOLIO.etf.map(s=>({...s,cat:'ETF'})),
+  ];
+  const tbody = document.getElementById('watchlist-body');
+  if (!tbody) return;
+  tbody.innerHTML = all.map(s => `
+    <tr onclick="openTV('${s.t}')" style="cursor:pointer;">
+      <td class="td-ticker">${s.t}</td>
+      <td>${s.n}</td>
+      <td style="font-size:10px;color:var(--text3);">${s.cat}</td>
+      <td>${s.mc}</td>
+      <td>${s.pe}</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div style="width:60px;height:5px;background:var(--bg4);border-radius:3px;overflow:hidden;">
+            <div style="width:${s.risk}%;height:100%;background:${RISK_COLOR(s.risk)};border-radius:3px;"></div>
+          </div>
+          <span style="font-size:10px;color:${RISK_COLOR(s.risk)};">${s.risk}</span>
+        </div>
+      </td>
+      <td><span style="font-size:10px;color:var(--accent2);cursor:pointer;">Ver →</span></td>
+    </tr>
+  `).join('');
+}
+
+// ===================== NAVIGATION =====================
+const SECTION_TITLES = {
+  overview: 'Overview', cerebras: 'Cerebras Supply Chain',
+  megacap: 'Mega Cap', smallcap: 'Small Caps',
+  aiinfra: 'AI Infrastructure', defense: 'Defense & Tech',
+  quantum: 'Quantum', cheap: 'Cheaper Stocks',
+  etf: 'ETFs', chart: 'Gráfica Avanzada TV',
+  news: 'Noticias', watchlist: 'Watchlist'
+};
+
+function showSection(name) {
+  document.querySelectorAll('.section-page').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+  const sec = document.getElementById('sec-' + name);
+  if (sec) sec.classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(b => {
+    if (b.getAttribute('onclick') && b.getAttribute('onclick').includes("'"+name+"'")) b.classList.add('active');
+  });
+  document.getElementById('page-title-label').textContent = SECTION_TITLES[name] || name;
+  window.scrollTo({top:0, behavior:'smooth'});
+  if (window.innerWidth <= 900) document.querySelector('.sidebar').classList.remove('open');
+}
+
+function reloadChart() {
+  document.querySelectorAll('iframe').forEach(f => { const s = f.src; f.src=''; f.src=s; });
+}
+
+// ===================== INIT =====================
+function init() {
+  renderCards('megacap-cards', PORTFOLIO.megacap, 'megacap');
+  renderCards('smallcap-cards', PORTFOLIO.smallcap, 'smallcap');
+  renderCards('aiinfra-cards', PORTFOLIO.aiinfra, 'aiinfra');
+  renderCards('defense-cards', PORTFOLIO.defense, 'defense');
+  renderCards('quantum-cards', PORTFOLIO.quantum, 'quantum');
+  renderCards('cheap-cards', PORTFOLIO.cheap, 'cheap');
+  renderCards('etf-cards', PORTFOLIO.etf, 'etf');
+  buildChartSymbolBtns();
+  buildWatchlist();
+}
+
+init();
+
+// ========== SECTION TITLES (updated) ==========
+const EXTRA_TITLES = {
+  trades: 'Mis Trades', reporte: 'Reporte P&L',
+  agregar: 'Agregar Acción', chart: 'Gráfica TradingView'
+};
+
+// ========== TV EMBEDDED CHART ==========
+let tvInterval = 'D';
+function tvEmbedUrl(sym, iv) {
+  return `https://www.tradingview.com/widgetsnippet/symbol/${sym}/?theme=dark&locale=es&interval=${iv||'D'}&studies=RSI@tv-basicstudies,MACD@tv-basicstudies,BB@tv-basicstudies,VWAP@tv-basicstudies`;
+}
+function loadTVChart() {
+  const sym = (document.getElementById('tv-symbol-input').value || 'NVDA').toUpperCase().trim();
+  document.getElementById('tv-main-iframe').src = tvEmbedUrl(sym, tvInterval);
+  document.getElementById('tv-chart-label').textContent = sym + ' — Gráfica en vivo';
+  document.getElementById('tv-symbol-input').value = sym;
+}
+function quickTV(sym, btn) {
+  document.querySelectorAll('#sec-chart .chart-tab').forEach(b => b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  document.getElementById('tv-main-iframe').src = tvEmbedUrl(sym, tvInterval);
+  document.getElementById('tv-chart-label').textContent = sym + ' — Gráfica en vivo';
+  document.getElementById('tv-symbol-input').value = sym;
+}
+function setTVInterval(iv, btn) {
+  tvInterval = iv;
+  document.querySelectorAll('#sec-chart .chart-panel-head .chart-tab').forEach(b => b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  const sym = (document.getElementById('tv-symbol-input').value || 'NVDA').toUpperCase();
+  document.getElementById('tv-main-iframe').src = tvEmbedUrl(sym, iv);
+}
+
+// ========== TRADES DATA ==========
+let trades = JSON.parse(localStorage.getItem('portfolio_trades') || '[]');
+let addedStocks = JSON.parse(localStorage.getItem('portfolio_added') || '[]');
+let tradeFilter = 'all';
+let addedFilter = 'all';
+
+function saveTrades() { localStorage.setItem('portfolio_trades', JSON.stringify(trades)); }
+function saveAdded() { localStorage.setItem('portfolio_added', JSON.stringify(addedStocks)); }
+
+// ========== TRADE MODAL ==========
+function openTradeModal(editId) {
+  const m = document.getElementById('trade-modal');
+  if (editId !== undefined) {
+    const t = trades.find(x => x.id === editId);
+    if (!t) return;
+    document.getElementById('tm-ticker').value = t.ticker;
+    document.getElementById('tm-empresa').value = t.empresa;
+    document.getElementById('tm-fecha').value = t.fecha;
+    document.getElementById('tm-hora').value = t.hora;
+    document.getElementById('tm-precio').value = t.precioEntrada;
+    document.getElementById('tm-acciones').value = t.acciones;
+    document.getElementById('tm-target').value = t.target || '';
+    document.getElementById('tm-stop').value = t.stop || '';
+    document.getElementById('tm-estado').value = t.estado || 'abierta';
+    document.getElementById('tm-precioactual').value = t.precioActual || '';
+    document.getElementById('tm-notas').value = t.notas || '';
+    document.getElementById('tm-edit-id').value = editId;
+  } else {
+    document.getElementById('trade-form').reset();
+    document.getElementById('tm-edit-id').value = '';
+    const now = new Date();
+    document.getElementById('tm-fecha').value = now.toISOString().split('T')[0];
+    document.getElementById('tm-hora').value = now.toTimeString().slice(0,5);
+  }
+  m.classList.add('open');
+}
+function closeTradeModal() { document.getElementById('trade-modal').classList.remove('open'); }
+
+function saveTrade() {
+  const editId = document.getElementById('tm-edit-id').value;
+  const ticker = document.getElementById('tm-ticker').value.toUpperCase().trim();
+  if (!ticker) { alert('El ticker es requerido'); return; }
+  const precio = parseFloat(document.getElementById('tm-precio').value) || 0;
+  const acciones = parseFloat(document.getElementById('tm-acciones').value) || 0;
+  const precioActual = parseFloat(document.getElementById('tm-precioactual').value) || precio;
+  const trade = {
+    id: editId || Date.now().toString(),
+    ticker,
+    empresa: document.getElementById('tm-empresa').value,
+    fecha: document.getElementById('tm-fecha').value,
+    hora: document.getElementById('tm-hora').value,
+    precioEntrada: precio,
+    acciones,
+    invertido: precio * acciones,
+    target: parseFloat(document.getElementById('tm-target').value) || null,
+    stop: parseFloat(document.getElementById('tm-stop').value) || null,
+    estado: document.getElementById('tm-estado').value,
+    precioActual,
+    notas: document.getElementById('tm-notas').value,
+    addedAt: new Date().toISOString()
+  };
+  if (editId) {
+    const idx = trades.findIndex(x => x.id === editId);
+    if (idx >= 0) trades[idx] = trade;
+  } else {
+    trades.unshift(trade);
+  }
+  saveTrades();
+  closeTradeModal();
+  renderTrades();
+  renderReporte();
+}
+
+function deleteTrade(id) {
+  if (!confirm('¿Eliminar este trade?')) return;
+  trades = trades.filter(t => t.id !== id);
+  saveTrades();
+  renderTrades();
+  renderReporte();
+}
+
+// ========== RENDER TRADES ==========
+function filterTrades(f, btn) {
+  if (f !== 'search') {
+    tradeFilter = f;
+    document.querySelectorAll('#sec-trades .filter-btn').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+  }
+  renderTrades();
+}
+
+function getFilteredTrades() {
+  const now = new Date();
+  const search = (document.getElementById('trade-search')?.value || '').toUpperCase();
+  return trades.filter(t => {
+    if (search && !t.ticker.includes(search) && !(t.empresa||'').toUpperCase().includes(search)) return false;
+    const d = new Date(t.fecha);
+    if (tradeFilter === 'today') return d.toDateString() === now.toDateString();
+    if (tradeFilter === 'week') {
+      const week = new Date(now); week.setDate(now.getDate() - 7);
+      return d >= week;
+    }
+    if (tradeFilter === 'month') {
+      return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+    }
+    if (tradeFilter === 'open') return t.estado === 'abierta';
+    if (tradeFilter === 'closed') return t.estado === 'cerrada';
+    return true;
+  });
+}
+
+function calcPL(t) {
+  const cur = t.precioActual || t.precioEntrada;
+  const pl = (cur - t.precioEntrada) * t.acciones;
+  const pct = t.precioEntrada > 0 ? ((cur - t.precioEntrada) / t.precioEntrada) * 100 : 0;
+  return { pl, pct, cur };
+}
+
+function fmtMoney(v) {
+  return (v >= 0 ? '+' : '') + '$' + Math.abs(v).toFixed(2);
+}
+function fmtPct(v) {
+  return (v >= 0 ? '+' : '') + v.toFixed(2) + '%';
+}
+function clsPL(v) { return v > 0 ? 'td-pos' : v < 0 ? 'td-neg' : 'td-neu'; }
+
+function renderTrades() {
+  const tbody = document.getElementById('trades-tbody');
+  if (!tbody) return;
+  const list = getFilteredTrades();
+  if (!list.length) {
+    tbody.innerHTML = '<tr><td colspan="15" style="text-align:center;padding:32px;color:var(--text3);font-family:var(--font-mono);font-size:12px;">Sin trades para este filtro.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = list.map(t => {
+    const {pl, pct, cur} = calcPL(t);
+    const rr = t.target && t.stop && t.precioEntrada ?
+      (((t.target - t.precioEntrada) / (t.precioEntrada - t.stop))).toFixed(1) + 'R' : '—';
+    return `<tr>
+      <td class="td-main" style="cursor:pointer;" onclick="quickTV('${t.ticker}',null);showSection('chart')">${t.ticker}</td>
+      <td>${t.empresa || '—'}</td>
+      <td>${t.fecha}</td>
+      <td>${t.hora || '—'}</td>
+      <td>$${t.precioEntrada.toFixed(2)}</td>
+      <td>${t.acciones}</td>
+      <td>$${(t.invertido||0).toFixed(2)}</td>
+      <td>${t.target ? '$'+t.target : '—'}</td>
+      <td>${t.stop ? '$'+t.stop : '—'}</td>
+      <td>$${cur.toFixed(2)}</td>
+      <td class="${clsPL(pl)}">${fmtMoney(pl)}</td>
+      <td class="${clsPL(pct)}">${fmtPct(pct)}</td>
+      <td><span style="font-size:10px;padding:3px 8px;border-radius:4px;background:${t.estado==='abierta'?'rgba(0,229,160,.1)':'rgba(144,144,168,.1)'};color:${t.estado==='abierta'?'var(--accent)':'var(--text3)'};">${t.estado}</span></td>
+      <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${t.notas||''}">${t.notas||'—'}</td>
+      <td style="white-space:nowrap;">
+        <button class="del-btn" onclick="openTradeModal('${t.id}')" title="Editar">✏️</button>
+        <button class="del-btn" onclick="deleteTrade('${t.id}')" title="Eliminar">🗑</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+// ========== REPORTE ==========
+function filterReporte(f, btn) {
+  document.querySelectorAll('#sec-reporte .filter-btn').forEach(b => b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  renderReporte(f);
+}
+
+function renderReporte(filter) {
+  const now = new Date();
+  let list = [...trades];
+  if (filter === 'week') {
+    const week = new Date(now); week.setDate(now.getDate()-7);
+    list = list.filter(t => new Date(t.fecha) >= week);
+  } else if (filter === 'month') {
+    list = list.filter(t => {
+      const d = new Date(t.fecha);
+      return d.getMonth()===now.getMonth() && d.getFullYear()===now.getFullYear();
+    });
+  }
+
+  let totalPL = 0, totalInv = 0, ganadores = 0, perdedores = 0, mejorPL = 0;
+  const rows = list.map(t => {
+    const {pl, pct, cur} = calcPL(t);
+    totalPL += pl;
+    totalInv += t.invertido || 0;
+    if (pl > 0) ganadores++;
+    else if (pl < 0) perdedores++;
+    if (pl > mejorPL) mejorPL = pl;
+    const rr = t.target && t.stop && t.precioEntrada ?
+      (((t.target - t.precioEntrada) / Math.abs(t.precioEntrada - t.stop))).toFixed(1) + 'R' : '—';
+    return `<tr>
+      <td class="td-main">${t.ticker}</td>
+      <td>${t.fecha}</td>
+      <td>$${t.precioEntrada.toFixed(2)}</td>
+      <td>$${cur.toFixed(2)}</td>
+      <td>${t.acciones}</td>
+      <td>$${(t.invertido||0).toFixed(2)}</td>
+      <td class="${clsPL(pl)}">${fmtMoney(pl)}</td>
+      <td class="${clsPL(pct)}">${fmtPct(pct)}</td>
+      <td>${rr}</td>
+      <td><span style="font-size:10px;padding:2px 7px;border-radius:4px;background:${t.estado==='abierta'?'rgba(0,229,160,.1)':'rgba(144,144,168,.1)'};color:${t.estado==='abierta'?'var(--accent)':'var(--text3)'};">${t.estado}</span></td>
+    </tr>`;
+  }).join('');
+
+  const winRate = list.length > 0 ? ((ganadores/list.length)*100).toFixed(0) : 0;
+  const retPct = totalInv > 0 ? ((totalPL/totalInv)*100).toFixed(2) : 0;
+
+  const plColor = totalPL >= 0 ? 'var(--accent)' : 'var(--red)';
+  document.getElementById('pl-total').textContent = fmtMoney(totalPL);
+  document.getElementById('pl-total').style.color = plColor;
+  document.getElementById('pl-pct').textContent = fmtPct(parseFloat(retPct));
+  document.getElementById('pl-pct').style.color = plColor;
+  document.getElementById('pl-invertido').textContent = '$'+totalInv.toFixed(2);
+  document.getElementById('pl-trades-count').textContent = list.length;
+  document.getElementById('pl-ganadores').textContent = ganadores;
+  document.getElementById('pl-perdedores').textContent = perdedores;
+  document.getElementById('pl-win-rate').textContent = winRate + '%';
+  document.getElementById('pl-mejor').textContent = fmtMoney(mejorPL);
+
+  const tbody = document.getElementById('reporte-tbody');
+  if (tbody) tbody.innerHTML = rows || '<tr><td colspan="10" style="text-align:center;padding:24px;color:var(--text3);font-size:12px;">Sin datos</td></tr>';
+}
+
+// ========== CSV TRADES ==========
+function exportTradesCSV() {
+  const headers = ['id','ticker','empresa','fecha','hora','precioEntrada','acciones','invertido','target','stop','precioActual','estado','notas'];
+  const rows = trades.map(t => headers.map(h => JSON.stringify(t[h]||'')).join(','));
+  const csv = [headers.join(','), ...rows].join('\n');
+  downloadFile('trades_portfolio.csv', csv, 'text/csv');
+}
+
+function importTradesCSV(event) {
+  const file = event.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const lines = e.target.result.split('\n').filter(Boolean);
+      const headers = lines[0].split(',');
+      const imported = lines.slice(1).map(line => {
+        const vals = line.match(/(".*?"|[^,]+)/g) || [];
+        const obj = {};
+        headers.forEach((h,i) => { obj[h] = (vals[i]||'').replace(/^"|"$/g,''); });
+        obj.precioEntrada = parseFloat(obj.precioEntrada)||0;
+        obj.acciones = parseFloat(obj.acciones)||0;
+        obj.invertido = parseFloat(obj.invertido)||0;
+        obj.target = obj.target ? parseFloat(obj.target) : null;
+        obj.stop = obj.stop ? parseFloat(obj.stop) : null;
+        obj.precioActual = parseFloat(obj.precioActual)||obj.precioEntrada;
+        return obj;
+      });
+      trades = [...imported, ...trades.filter(t => !imported.find(i => i.id === t.id))];
+      saveTrades(); renderTrades(); renderReporte();
+      alert('Importados ' + imported.length + ' trades');
+    } catch(err) { alert('Error al importar: ' + err.message); }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
+
+// ========== ADDED STOCKS ==========
+function addCustomStock() {
+  const ticker = (document.getElementById('add-ticker').value || '').toUpperCase().trim();
+  const nombre = document.getElementById('add-nombre').value.trim();
+  if (!ticker || !nombre) { alert('Ticker y Empresa son requeridos'); return; }
+  const stock = {
+    id: Date.now().toString(),
+    t: ticker,
+    n: nombre,
+    s: document.getElementById('add-sector').value || 'Custom',
+    cat: document.getElementById('add-cat').value,
+    p: document.getElementById('add-precio').value ? '$'+document.getElementById('add-precio').value : '—',
+    mc: document.getElementById('add-mc').value || '—',
+    pe: document.getElementById('add-pe').value || 'N/A',
+    risk: parseInt(document.getElementById('add-riesgo').value) || 50,
+    notas: document.getElementById('add-notas').value,
+    addedAt: new Date().toISOString()
+  };
+  addedStocks.unshift(stock);
+  saveAdded();
+  renderAdded();
+  clearAddForm();
+  alert('✓ ' + ticker + ' agregado al portafolio');
+}
+
+function clearAddForm() {
+  ['add-ticker','add-nombre','add-sector','add-precio','add-mc','add-pe','add-riesgo','add-notas'].forEach(id => {
+    const el = document.getElementById(id); if(el) el.value = '';
+  });
+}
+
+function deleteAdded(id) {
+  if (!confirm('¿Eliminar esta acción?')) return;
+  addedStocks = addedStocks.filter(s => s.id !== id);
+  saveAdded();
+  renderAdded();
+}
+
+function filterAdded(f, btn) {
+  addedFilter = f;
+  document.querySelectorAll('#sec-agregar .filter-btn').forEach(b => b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  renderAdded();
+}
+
+const RISK_COLOR2 = r => r < 50 ? '#00e5a0' : r < 70 ? '#f0c040' : '#ff4d6d';
+
+function renderAdded() {
+  const grid = document.getElementById('added-grid');
+  if (!grid) return;
+  const now = new Date();
+  let list = [...addedStocks];
+  if (addedFilter === 'today') list = list.filter(s => new Date(s.addedAt).toDateString() === now.toDateString());
+  else if (addedFilter === 'week') {
+    const week = new Date(now); week.setDate(now.getDate()-7);
+    list = list.filter(s => new Date(s.addedAt) >= week);
+  } else if (addedFilter === 'month') {
+    list = list.filter(s => {
+      const d = new Date(s.addedAt);
+      return d.getMonth()===now.getMonth() && d.getFullYear()===now.getFullYear();
+    });
+  }
+  if (!list.length) {
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:32px;color:var(--text3);font-family:var(--font-mono);font-size:12px;">Sin acciones en este período.</div>';
+    return;
+  }
+  grid.innerHTML = list.map(s => `
+    <div class="added-card">
+      <button class="del-btn del-abs" onclick="deleteAdded('${s.id}')">✕</button>
+      <div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:4px;cursor:pointer;" onclick="quickTV('${s.t}',null);showSection('chart')">${s.t}</div>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:12px;">${s.n}</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px;">
+        <div style="background:var(--bg3);border-radius:6px;padding:7px 9px;">
+          <div style="font-size:9px;font-family:var(--font-mono);color:var(--text3);margin-bottom:2px;">PRECIO</div>
+          <div style="font-size:12px;font-weight:500;font-family:var(--font-mono);">${s.p}</div>
+        </div>
+        <div style="background:var(--bg3);border-radius:6px;padding:7px 9px;">
+          <div style="font-size:9px;font-family:var(--font-mono);color:var(--text3);margin-bottom:2px;">SECTOR</div>
+          <div style="font-size:11px;font-weight:500;font-family:var(--font-mono);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${s.s}</div>
+        </div>
+      </div>
+      <div style="height:3px;background:var(--bg4);border-radius:2px;margin-bottom:6px;overflow:hidden;">
+        <div style="height:100%;width:${s.risk}%;background:${RISK_COLOR2(s.risk)};border-radius:2px;"></div>
+      </div>
+      <div style="font-size:9px;font-family:var(--font-mono);color:var(--text3);margin-bottom:8px;">RIESGO: ${s.risk}/100</div>
+      ${s.notas ? `<div style="font-size:10px;color:var(--text3);font-style:italic;border-top:1px solid var(--border);padding-top:8px;margin-top:4px;">${s.notas.slice(0,80)}${s.notas.length>80?'...':''}</div>` : ''}
+      <div style="font-size:9px;font-family:var(--font-mono);color:var(--text3);margin-top:8px;">
+        Agregado: ${new Date(s.addedAt).toLocaleDateString('es-MX')}
+      </div>
+    </div>
+  `).join('');
+}
+
+// ========== CSV ADDED ==========
+function exportAddedCSV() {
+  const headers = ['id','t','n','s','cat','p','mc','pe','risk','notas','addedAt'];
+  const rows = addedStocks.map(s => headers.map(h => JSON.stringify(s[h]||'')).join(','));
+  const csv = [headers.join(','), ...rows].join('\n');
+  downloadFile('acciones_agregadas.csv', csv, 'text/csv');
+}
+
+function importAddedCSV(event) {
+  const file = event.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const lines = e.target.result.split('\n').filter(Boolean);
+      const headers = lines[0].split(',');
+      const imported = lines.slice(1).map(line => {
+        const vals = line.match(/(".*?"|[^,]+)/g) || [];
+        const obj = {};
+        headers.forEach((h,i) => { obj[h] = (vals[i]||'').replace(/^"|"$/g,''); });
+        obj.risk = parseInt(obj.risk)||50;
+        if (!obj.addedAt) obj.addedAt = new Date().toISOString();
+        return obj;
+      });
+      addedStocks = [...imported, ...addedStocks.filter(s => !imported.find(i => i.id === s.id))];
+      saveAdded(); renderAdded();
+      alert('Importadas ' + imported.length + ' acciones');
+    } catch(err) { alert('Error: ' + err.message); }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
+
+// ========== DOWNLOAD HELPER ==========
+function downloadFile(name, content, type) {
+  const blob = new Blob([content], {type});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+// ========== PATCH showSection ==========
+const _origShowSection = showSection;
+function showSection(name) {
+  _origShowSection(name);
+  if (name === 'trades') renderTrades();
+  if (name === 'reporte') renderReporte();
+  if (name === 'agregar') renderAdded();
+  // Update title for new sections
+  if (EXTRA_TITLES[name]) document.getElementById('page-title-label').textContent = EXTRA_TITLES[name];
+}
+
+</script>
+
+<!-- TRADE MODAL -->
+<div class="modal-overlay" id="trade-modal">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title">Registrar Trade</div>
+      <button class="modal-close" onclick="closeTradeModal()">✕</button>
+    </div>
+    <form id="trade-form" onsubmit="event.preventDefault();saveTrade()">
+      <input type="hidden" id="tm-edit-id">
+      <div class="form-grid" style="margin-bottom:12px;">
+        <div class="form-group">
+          <label class="form-label">Ticker *</label>
+          <input class="form-input" id="tm-ticker" placeholder="Ej: NVDA" required style="text-transform:uppercase;">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Empresa</label>
+          <input class="form-input" id="tm-empresa" placeholder="Ej: NVIDIA Corp">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Fecha *</label>
+          <input class="form-input" id="tm-fecha" type="date" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Hora</label>
+          <input class="form-input" id="tm-hora" type="time">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Precio Entrada $ *</label>
+          <input class="form-input" id="tm-precio" type="number" step="0.0001" placeholder="0.00" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">N° Acciones *</label>
+          <input class="form-input" id="tm-acciones" type="number" step="0.001" placeholder="0" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Target $ (objetivo)</label>
+          <input class="form-input" id="tm-target" type="number" step="0.0001" placeholder="0.00">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Stop Loss $</label>
+          <input class="form-input" id="tm-stop" type="number" step="0.0001" placeholder="0.00">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Precio Actual $</label>
+          <input class="form-input" id="tm-precioactual" type="number" step="0.0001" placeholder="Déjalo vacío = igual a entrada">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Estado</label>
+          <select class="form-input" id="tm-estado">
+            <option value="abierta">Abierta</option>
+            <option value="cerrada">Cerrada</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group" style="margin-bottom:18px;">
+        <label class="form-label">Notas del Trade</label>
+        <textarea class="form-input form-textarea" id="tm-notas" placeholder="Setup, razón de entrada, observaciones..."></textarea>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;">
+        <button type="button" class="ask-btn" onclick="closeTradeModal()" style="padding:9px 18px;font-size:12px;">Cancelar</button>
+        <button type="submit" class="ask-btn" style="padding:9px 24px;font-size:12px;background:rgba(0,229,160,.1);border-color:rgba(0,229,160,.3);color:var(--accent);">✓ Guardar Trade</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+</body>
+</html>
